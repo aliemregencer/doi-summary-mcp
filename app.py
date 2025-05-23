@@ -50,3 +50,21 @@ def summarize_text(text: str) -> str:
         return response.json()["choices"][0]["message"]["content"].strip()
     else:
         return f"OpenAI Hatası: {response.status_code}\n{response.text}"
+    
+def get_pdf_url_from_unpaywall(doi: str, email: str) -> str:
+    """
+    Unpaywall üzerinden DOI için varsa açık erişim PDF URL'sini getirir.
+    """
+    url = f"https://api.unpaywall.org/v2/{doi}?email={email}"
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            location = data.get("best_oa_location", {})
+            pdf_url = location.get("url_for_pdf")
+            return pdf_url  # None olabilir
+        else:
+            return None
+    except Exception as e:
+        return None
+
