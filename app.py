@@ -1,6 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
+import fitz;  # PyMuPDF kütüphanesi
 
 load_dotenv()  # .env dosyasını yükle
 
@@ -67,4 +68,23 @@ def get_pdf_url_from_unpaywall(doi: str, email: str) -> str:
             return None
     except Exception as e:
         return None
+    
+import fitz  # en üste ekle
+
+def extract_text_from_pdf_url(pdf_url: str) -> str:
+    """
+    PDF URL'sinden indirilen dosyadan metin çıkarır.
+    """
+    response = requests.get(pdf_url)
+    with open("temp.pdf", "wb") as f:
+        f.write(response.content)
+
+    text = ""
+    doc = fitz.open("temp.pdf")
+    for page in doc:
+        text += page.get_text()
+    doc.close()
+
+    return text.strip()
+
 
