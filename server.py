@@ -8,18 +8,17 @@ from app import (
 
 mcp = FastMCP("doi-summary-mcp")
 
-# Unpaywall için e-mail adresin
 UNPAYWALL_EMAIL = "genceraliemre@gmail.com"
 
 @mcp.tool()
 async def summarize_doi(doi: str) -> str:
     """
     DOI girilerek makale özeti alınır.
-    - Önce Unpaywall'dan PDF varsa indirip tam metinden özetler.
-    - Yoksa başlık ve abstract'tan özet çıkarır.
+    Öncelik sırası:
+    1. Unpaywall üzerinden PDF varsa tam metni özetle
+    2. PDF yoksa abstract'ı özetle
     """
     try:
-        # PDF varsa önce onu dene
         pdf_url = get_pdf_url_from_unpaywall(doi, UNPAYWALL_EMAIL)
         if pdf_url:
             try:
@@ -28,16 +27,15 @@ async def summarize_doi(doi: str) -> str:
                     return "PDF bulundu ancak içerik çıkarılamadı."
                 return summarize_text(full_text)
             except Exception as e:
-                return f"PDF indirildi ancak işlenirken hata oluştu: {str(e)}"
+                return f"PDF indirildi ancak işlenirken hata oluştu:\n{str(e)}"
 
-        # PDF yoksa metadata fallback
         text = get_article_text(doi)
         if "bulunamadı" in text:
             return "Makale erişimi sağlanamadı."
         return summarize_text(text)
 
     except Exception as e:
-        return f"Bir hata oluştu: {str(e)}"
+        return f"Bir hata oluştu:\n{str(e)}"
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
